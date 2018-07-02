@@ -1061,11 +1061,13 @@ typedef union t1ha_uint128 {
 #endif
   struct {
 #if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
-    uint64_t l, h;
+    uint64_t l;
+    uint64_t h;
 #else
-    uint64_t h, l;
+    uint64_t h;
+    uint64_t l;
 #endif
-  };
+  } p;
 } t1ha_uint128_t;
 
 static __always_inline t1ha_uint128_t not128(const t1ha_uint128_t v) {
@@ -1074,8 +1076,8 @@ static __always_inline t1ha_uint128_t not128(const t1ha_uint128_t v) {
     (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 128)
   r.v = ~v.v;
 #else
-  r.l = ~v.l;
-  r.h = ~v.h;
+  r.p.l = ~v.p.l;
+  r.p.h = ~v.p.h;
 #endif
   return r;
 }
@@ -1088,8 +1090,8 @@ static __always_inline t1ha_uint128_t left128(const t1ha_uint128_t v,
     (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 128)
   r.v = v.v << s;
 #else
-  r.l = (s < 64) ? v.l << s : 0;
-  r.h = (s < 64) ? (v.h << s) | (s ? v.l >> (64 - s) : 0) : v.l << (s - 64);
+  r.p.l = (s < 64) ? v.p.l << s : 0;
+  r.p.h = (s < 64) ? (v.p.h << s) | (s ? v.p.l >> (64 - s) : 0) : v.p.l << (s - 64);
 #endif
   return r;
 }
@@ -1102,8 +1104,8 @@ static __always_inline t1ha_uint128_t right128(const t1ha_uint128_t v,
     (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 128)
   r.v = v.v >> s;
 #else
-  r.l = (s < 64) ? (s ? v.h << (64 - s) : 0) | (v.l >> s) : v.h >> (s - 64);
-  r.h = (s < 64) ? v.h >> s : 0;
+  r.p.l = (s < 64) ? (s ? v.p.h << (64 - s) : 0) | (v.p.l >> s) : v.p.h >> (s - 64);
+  r.p.h = (s < 64) ? v.p.h >> s : 0;
 #endif
   return r;
 }
@@ -1115,8 +1117,8 @@ static __always_inline t1ha_uint128_t or128(t1ha_uint128_t x,
     (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 128)
   r.v = x.v | y.v;
 #else
-  r.l = x.l | y.l;
-  r.h = x.h | y.h;
+  r.p.l = x.p.l | y.p.l;
+  r.p.h = x.p.h | y.p.h;
 #endif
   return r;
 }
@@ -1128,8 +1130,8 @@ static __always_inline t1ha_uint128_t xor128(t1ha_uint128_t x,
     (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 128)
   r.v = x.v ^ y.v;
 #else
-  r.l = x.l ^ y.l;
-  r.h = x.h ^ y.h;
+  r.p.l = x.p.l ^ y.p.l;
+  r.p.h = x.p.h ^ y.p.h;
 #endif
   return r;
 }
@@ -1152,7 +1154,7 @@ static __always_inline t1ha_uint128_t add128(t1ha_uint128_t x,
     (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 128)
   r.v = x.v + y.v;
 #else
-  add64carry_last(add64carry_first(x.l, y.l, &r.l), x.h, y.h, &r.h);
+  add64carry_last(add64carry_first(x.p.l, y.p.l, &r.p.l), x.p.h, y.p.h, &r.p.h);
 #endif
   return r;
 }
@@ -1164,8 +1166,8 @@ static __always_inline t1ha_uint128_t mul128(t1ha_uint128_t x,
     (defined(_INTEGRAL_MAX_BITS) && _INTEGRAL_MAX_BITS >= 128)
   r.v = x.v * y.v;
 #else
-  r.l = mul_64x64_128(x.l, y.l, &r.h);
-  r.h += x.l * y.h + y.l * x.h;
+  r.p.l = mul_64x64_128(x.p.l, y.p.l, &r.p.h);
+  r.p.h += x.p.l * y.p.h + y.p.l * x.p.h;
 #endif
   return r;
 }
